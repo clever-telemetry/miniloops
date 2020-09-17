@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: loops
+---
+apiVersion: clever-telemetry.io/v1
+kind: Loop
+metadata:
+  namespace: loops
+  name: test
+spec:
+  endpoint: https://warp10.gra1.metrics.ovh.net/api/v0/exec
+  every: 10s
+  imports:
+  - secret:
+      name: mysecret
+  script: |
+    REV
+    SYMBOLS
+    1
+    // ksdfghjl
+...

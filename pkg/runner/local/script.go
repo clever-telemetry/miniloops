@@ -98,12 +98,19 @@ func (script *Script) Start() {
 				continue
 			}
 
-			script.recorder.AnnotatedEventf(script.object, map[string]string{
-				"version":            fmt.Sprintf("%d", script.version),
-				"fetched":            fmt.Sprintf("%d", res.Fetched()),
-				"ops":                fmt.Sprintf("%d", res.Ops()),
-				"serverSideDuration": res.Elapsed().String(),
-			}, "Normal", "ExecSuccess", "Success (fetched=%d ops=%d elapsed=%s)", res.Fetched(), res.Ops(), res.Elapsed())
+			script.recorder.AnnotatedEventf(
+				script.object,
+				map[string]string{
+					"version":            fmt.Sprintf("%d", script.version),
+					"fetched":            fmt.Sprintf("%d", res.Fetched()),
+					"ops":                fmt.Sprintf("%d", res.Ops()),
+					"serverSideDuration": res.Elapsed().String(),
+				},
+				"Normal",
+				"ExecSuccess",
+				"Success (fetched=%d ops=%d elapsed=%s)",
+				res.Fetched(), res.Ops(), res.Elapsed(), res.StackRawString(),
+			)
 
 		}
 	}()
@@ -142,10 +149,10 @@ func (script *Script) Exec() (*warp10.Response, error) {
 			}
 		}
 	}
-	ws.WriteString("'TOP' SECTION LINEON\n")
+	ws.WriteString("LINEON\n")
 	ws.WriteString(script.warpscript)
 
-	logrus.Debug("WarpScript\n", ws.String())
+	logrus.Info("WarpScript\n", ws.String())
 
 	res := warp10.NewRequest(script.endpoint, script.warpscript).Exec()
 	if res.IsErrored() {

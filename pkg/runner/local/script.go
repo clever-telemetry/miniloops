@@ -10,6 +10,7 @@ import (
 	loops "github.com/clever-telemetry/miniloops/apis/loops/v1"
 	"github.com/clever-telemetry/miniloops/pkg/client"
 	"github.com/clever-telemetry/miniloops/pkg/warp10"
+	"github.com/iancoleman/strcase"
 	"github.com/sirupsen/logrus"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/record"
@@ -98,12 +99,19 @@ func (script *Script) Start() {
 				continue
 			}
 
-			script.recorder.AnnotatedEventf(script.object, map[string]string{
-				"version":            fmt.Sprintf("%d", script.version),
-				"fetched":            fmt.Sprintf("%d", res.Fetched()),
-				"ops":                fmt.Sprintf("%d", res.Ops()),
-				"serverSideDuration": res.Elapsed().String(),
-			}, "Normal", "ExecSuccess", "Success (fetched=%d ops=%d elapsed=%s)", res.Fetched(), res.Ops(), res.Elapsed())
+			script.recorder.AnnotatedEventf(
+				script.object,
+				map[string]string{
+					"version":            fmt.Sprintf("%d", script.version),
+					"fetched":            fmt.Sprintf("%d", res.Fetched()),
+					"ops":                fmt.Sprintf("%d", res.Ops()),
+					"serverSideDuration": res.Elapsed().String(),
+				},
+				"Normal",
+				"ExecSuccess",
+				"Success (fetched=%d ops=%d elapsed=%s)",
+				res.Fetched(), res.Ops(), res.Elapsed(), res.StackRawString(),
+			)
 
 		}
 	}()
@@ -138,16 +146,20 @@ func (script *Script) Exec() (*warp10.Response, error) {
 			}
 
 			for k, v := range secret.Data {
-				ws.WriteString(fmt.Sprintf("'%v' '%s' STORE\n", string(v), string(k)))
+				ws.WriteString(fmt.Sprintf(
+					"'%v' '%s' STORE\n",
+					string(v),
+					fmt.Sprintf("%s.%s", strcase.ToLowerCamel(secret.GetName()), strcase.ToLowerCamel(k)),
+				))
 			}
 		}
 	}
-	ws.WriteString("'TOP' SECTION LINEON\n")
+	ws.WriteString("LINEON\n")
 	ws.WriteString(script.warpscript)
 
-	logrus.Debug("WarpScript\n", ws.String())
+	logrus.Info("WarpScript\n", ws.String())
 
-	res := warp10.NewRequest(script.endpoint, script.warpscript).Exec()
+	res := warp10.NewRequest(script.endpoint, ws.String()).Exec()
 	if res.IsErrored() {
 		return nil, res.Error()
 	}

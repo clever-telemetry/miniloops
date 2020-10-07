@@ -35,10 +35,7 @@ func (r *LocalRunner) UpsertLoop(loop *v1.Loop) error {
 	r.dataLock.Unlock()
 
 	script.SetObject(loop)
-	script.SetEndpoint(loop.Spec.Endpoint)
 	script.SetEvery(loop.Spec.Every.Duration)
-	script.SetWarpScript(loop.Spec.Script)
-	script.SetVersion(loop.GetGeneration())
 	script.Start()
 
 	return nil

@@ -77,6 +77,12 @@ func (res Response) StackRawString() string {
 	return string(res.StackRaw())
 }
 
+func (res Response) StackSlice() []interface{} {
+	var s []interface{}
+	_ = json.Unmarshal(res.StackRaw(), &s)
+	return s
+}
+
 func (res Response) StackUnmarshal(i interface{}) error {
 	return json.Unmarshal(res.stack, i)
 }

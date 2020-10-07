@@ -1,7 +1,7 @@
 # Miniloops
 
 ![Docker image](https://github.com/clever-telemetry/miniloops/workflows/Docker%20image/badge.svg)
-[![GoDoc](https://godoc.org/github.com/jaegertracing/jaeger-operator?status.svg)](https://pkg.go.dev/github.com/clever-telemetry/miniloops?tab=overview)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/clever-telemetry/miniloops)](https://pkg.go.dev/github.com/clever-telemetry/miniloops)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1f065d72fb55874e9d87/maintainability)](https://codeclimate.com/github/clever-telemetry/miniloops/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1f065d72fb55874e9d87/test_coverage)](https://codeclimate.com/github/clever-telemetry/miniloops/test_coverage)
 
@@ -121,3 +121,13 @@ spec:
 ...
 ```
 
+### Runner metrics
+
+Each loop produce serveral metrics, this is the list.
+There are exposed with all controllers metrics on this [endpoint](http://127.0.0.1:9100/metrics)
+
+```
+miniloops_runner_execution_count{ loop="LOOP_NAME", namespace="LOOP_NAMESPACE" } int
+miniloops_runner_execution_duration{ loop="LOOP_NAME", namespace="LOOP_NAMESPACE",unit="ms" } int
+miniloops_runner_execution_error_count{ loop="LOOP_NAME", namespace="LOOP_NAMESPACE" } int
+```

@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - name: operator
-        image: clevertelemetry/miniloops:latest
+        image: clevertelemetry/miniloops:v0.0.1
         ports:
         - containerPort: 8080
           name: http

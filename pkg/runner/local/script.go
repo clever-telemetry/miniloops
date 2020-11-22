@@ -80,14 +80,15 @@ func (script *Script) Start() {
 	go func() {
 		for range script.ticker.C {
 			start := time.Now()
+			ctx, _ := context.WithTimeout(context.Background(), script.every)
 
-			res, err := script.Exec()
+			res, err := script.Exec(ctx)
 			script.execCount.Inc()
 			script.execDuration.Add(float64(time.Since(start).Milliseconds()))
 
 			serr := client.
 				LoopsFor(script.object.GetNamespace()).
-				SetLastExecution(context.Background(), script.object.GetName(), time.Now(), err == nil)
+				SetLastExecution(ctx, script.object.GetName(), time.Now(), err == nil)
 			if serr != nil {
 				logrus.WithError(serr).Error("cannot set loop last execution")
 			}
@@ -133,7 +134,8 @@ func (script *Script) Stop() {
 	script.ticker.Stop()
 }
 
-func (script *Script) Exec() (*warp10.Response, error) {
+// Exec execute the given script
+func (script *Script) Exec(ctx context.Context) (*warp10.Response, error) {
 	script.Lock()
 	defer script.Unlock()
 
@@ -156,7 +158,7 @@ func (script *Script) Exec() (*warp10.Response, error) {
 				Native().
 				CoreV1().
 				Secrets(script.object.GetNamespace()).
-				Get(context.Background(), loopImport.Secret.Name, meta.GetOptions{})
+				Get(ctx, loopImport.Secret.Name, meta.GetOptions{})
 			if err != nil {
 				return nil, err
 			}
@@ -175,7 +177,9 @@ func (script *Script) Exec() (*warp10.Response, error) {
 
 	logrus.Debug("WarpScript\n", ws.String())
 
-	res := warp10.NewRequest(script.object.Spec.Endpoint, ws.String()).Exec()
+	res := warp10.
+		NewRequest(script.object.Spec.Endpoint, ws.String()).
+		Exec(ctx)
 	if res.IsErrored() {
 		return nil, res.Error()
 	}

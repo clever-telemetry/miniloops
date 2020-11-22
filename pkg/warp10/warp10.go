@@ -1,6 +1,7 @@
 package warp10
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -45,8 +46,13 @@ func NewRequest(endpoint, warpscript string) Request {
 	return Request{Endpoint: endpoint, WarpScript: warpscript}
 }
 
-func (req Request) Exec() *Response {
-	return Exec(req)
+// Exec execute the given WarpScript
+func (req Request) Exec(ctx context.Context) *Response {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	return Exec(ctx, req)
 }
 
 func (res Response) IsErrored() bool {
@@ -91,10 +97,11 @@ func (err ResponseError) Error() string {
 	return fmt.Sprintf("WarpScript#%d: %s", err.Line, err.Message)
 }
 
-func Exec(request Request) *Response {
+// Exec execute the given WarpScript
+func Exec(ctx context.Context, request Request) *Response {
 	response := &Response{request: &request}
 
-	req, err := http.NewRequest("POST", request.Endpoint, strings.NewReader(request.WarpScript))
+	req, err := http.NewRequestWithContext(ctx, "POST", request.Endpoint, strings.NewReader(request.WarpScript))
 	if err != nil {
 		return response
 	}

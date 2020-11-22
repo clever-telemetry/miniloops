@@ -70,6 +70,9 @@ spec:
               lastExecution:
                 format: date-time
                 type: string
+              lastExecutionSuccess:
+                format: date-time
+                type: string
             type: object
         type: object
     served: true

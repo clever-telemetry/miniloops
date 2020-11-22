@@ -3,6 +3,7 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	api "github.com/clever-telemetry/miniloops/apis/loops/v1"
 	"github.com/pkg/errors"
@@ -15,6 +16,8 @@ type LoopExpansion interface {
 	PatchSpec(ctx context.Context, original, modified *api.Loop) error
 	PatchStatus(ctx context.Context, original, modified *api.Loop) error
 	PatchMeta(ctx context.Context, original, modified *api.Loop) error
+	// Register the last execution
+	SetLastExecution(ctx context.Context, name string, executionTime time.Time, isSuccess bool) error
 }
 
 // Patch the loop spec only (client side usage)
@@ -100,7 +103,7 @@ func (client *loops) PatchStatus(ctx context.Context, original, modified *api.Lo
 		return nil
 	}
 
-	next, err := client.Patch(ctx, modified.GetName(), types.MergePatchType, patch, meta.PatchOptions{}, "status")
+	next, err := client.Patch(ctx, original.GetName(), types.MergePatchType, patch, meta.PatchOptions{}, "status")
 	if err != nil {
 		return errors.Wrap(err, "cannot patch Loop")
 	}
@@ -156,4 +159,22 @@ func (client *loops) PatchMeta(ctx context.Context, original, modified *api.Loop
 	modified.ObjectMeta = *next.ObjectMeta.DeepCopy()
 
 	return nil
+}
+
+// Register an execution
+func (client *loops) SetLastExecution(ctx context.Context, name string, executionTime time.Time, isSuccess bool) error {
+	t := meta.NewTime(executionTime)
+
+	ori, err := client.Get(ctx, name, meta.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	mod := ori.DeepCopy()
+	mod.Status.LastExecution = &t
+	if isSuccess {
+		mod.Status.LastExecutionSuccess = &t
+	}
+
+	return client.PatchStatus(ctx, ori, mod)
 }

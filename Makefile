@@ -8,7 +8,7 @@ generate: controller-gen
 
 # Install CRDs into a cluster
 install: generate
-	kustomize build config/crd | kubectl apply -f -
+	kubectl apply -f config/crd/*
 
 # Uninstall CRDs into a cluster
 uninstall: manifests

@@ -38,8 +38,9 @@ type (
 
 	// Define Loops status
 	LoopStatus struct {
-		Deployed      bool       `json:"deployed,omitempty"`
-		LastExecution *meta.Time `json:"lastExecution,omitempty"`
+		Deployed             bool       `json:"deployed,omitempty"`
+		LastExecution        *meta.Time `json:"lastExecution,omitempty"`
+		LastExecutionSuccess *meta.Time `json:"lastExecutionSuccess,omitempty"`
 	}
 
 	Imports    []LoopImport

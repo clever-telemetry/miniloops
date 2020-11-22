@@ -85,6 +85,13 @@ func (script *Script) Start() {
 			script.execCount.Inc()
 			script.execDuration.Add(float64(time.Since(start).Milliseconds()))
 
+			serr := client.
+				LoopsFor(script.object.GetNamespace()).
+				SetLastExecution(context.Background(), script.object.GetName(), time.Now(), err == nil)
+			if serr != nil {
+				logrus.WithError(serr).Error("cannot set loop last execution")
+			}
+
 			if err != nil {
 				script.errorCount.Inc()
 				script.recorder.AnnotatedEventf(script.object, map[string]string{

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cbroglie/mustache"
 	loops "github.com/clever-telemetry/miniloops/apis/loops/v1"
 	"github.com/clever-telemetry/miniloops/pkg/client"
 	"github.com/clever-telemetry/miniloops/pkg/runner/metrics"
@@ -152,6 +153,8 @@ func (script *Script) Exec(ctx context.Context) (*warp10.Response, error) {
 		ws.WriteString(fmt.Sprintf("`%s` `label.%s` STORE\n", v, k))
 	}
 
+	secrets := map[string]string{}
+
 	for _, loopImport := range script.object.Spec.Imports {
 		if loopImport.Secret.Name != "" {
 			secret, err := client.
@@ -164,11 +167,13 @@ func (script *Script) Exec(ctx context.Context) (*warp10.Response, error) {
 			}
 
 			for k, v := range secret.Data {
+				secretName := fmt.Sprintf("%s.%s", strcase.ToLowerCamel(secret.GetName()), strcase.ToLowerCamel(k))
 				ws.WriteString(fmt.Sprintf(
 					"'%v' '%s' STORE\n",
 					string(v),
-					fmt.Sprintf("%s.%s", strcase.ToLowerCamel(secret.GetName()), strcase.ToLowerCamel(k)),
+					secretName,
 				))
+				secrets[secretName] = string(v)
 			}
 		}
 	}
@@ -177,8 +182,9 @@ func (script *Script) Exec(ctx context.Context) (*warp10.Response, error) {
 
 	logrus.Debug("WarpScript\n", ws.String())
 
+	endpoint := getEndpoint(script.object.Spec.Endpoint, secrets)
 	res := warp10.
-		NewRequest(script.object.Spec.Endpoint, ws.String()).
+		NewRequest(endpoint, ws.String()).
 		Exec(ctx)
 	if res.IsErrored() {
 		return nil, res.Error()
@@ -193,4 +199,13 @@ func serializeInterfaceSlice(is []interface{}) string {
 		s[i] = fmt.Sprintf("%v", ic)
 	}
 	return strings.Join(s, " ")
+}
+
+func getEndpoint(base string, secrets map[string]string) string {
+	ep, err := mustache.Render(base, secrets)
+	if err != nil {
+		return base
+	}
+
+	return ep
 }

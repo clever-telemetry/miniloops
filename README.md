@@ -7,6 +7,13 @@
 
 Miniloops goal is to provide an easy to use time series related tasks workflow.
 
+Features:
+- Scheduler
+- WarpScript support
+- Secrets support (mainly for  read/write tokens)
+- Basic Loops metrics
+- TODO: States
+
 ## Getting started
 
 ### Installation
@@ -120,6 +127,40 @@ spec:
       name: mysecret 
 ...
 ```
+
+### States
+
+In some use cases, you can have to reuse variables from a previous execution, that's where states came.
+States are a map of keys/values where keys are strings and values are whatever you want.
+
+You can enable States for your loop, with a parameter in the spec:
+
+```yaml
+apiVersion: clever-telemetry.io/v1
+kind: Loop
+metadata:
+  namespace: loops
+  name: test
+spec:
+  ...
+  useState: true
+  ...
+```
+
+By enabling this feature, each Loop execution will append a map to your stack.
+Then, you need put a map on your stack at the ends of your loops
+
+```warpscript
+// { 'count' 1 } // Injected state
+'previous' STORE
+
+// TODO: handle the case of first state, where 'count' is not defined
+$previous 'count' GET
+$count 1 +
+{ 'count' $count } // push a map (the next state) at the end of the stack
+```
+
+
 
 ### Runner metrics
 

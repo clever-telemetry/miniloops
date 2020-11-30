@@ -172,6 +172,11 @@ func (script *Script) Exec(ctx context.Context) (*warp10.Response, error) {
 			}
 		}
 	}
+
+	if script.object.Spec.UseState {
+		ws.WriteString(fmt.Sprintf("'%s' ->JSON", script.object.State.Data))
+	}
+
 	ws.WriteString("LINEON\n")
 	ws.WriteString(script.object.Spec.Script)
 

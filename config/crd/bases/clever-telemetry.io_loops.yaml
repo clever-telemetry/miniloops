@@ -61,6 +61,17 @@ spec:
                 type: array
               script:
                 type: string
+              useState:
+                type: boolean
+            type: object
+          state:
+            properties:
+              data:
+                format: byte
+                type: string
+              updateDate:
+                format: date-time
+                type: string
             type: object
           status:
             description: Define Loops status

@@ -18,6 +18,7 @@ type (
 
 		Spec   LoopSpec   `json:"spec,omitempty"`
 		Status LoopStatus `json:"status,omitempty"`
+		State  LoopState  `json:"state,omitempty"`
 	}
 
 	// LoopList contains a list of Loop
@@ -34,6 +35,8 @@ type (
 		Every    meta.Duration `json:"every,omitempty"`
 		// +optional
 		Imports Imports `json:"imports,omitempty"`
+		//+optional
+		UseState bool `json:"useState,omitempty"`
 	}
 
 	// Define Loops status
@@ -41,6 +44,11 @@ type (
 		Deployed             bool       `json:"deployed,omitempty"`
 		LastExecution        *meta.Time `json:"lastExecution,omitempty"`
 		LastExecutionSuccess *meta.Time `json:"lastExecutionSuccess,omitempty"`
+	}
+
+	LoopState struct {
+		UpdateDate *meta.Time `json:"updateDate,omitempty"`
+		Data       []byte     `json:"data,omitempty"`
 	}
 
 	Imports    []LoopImport

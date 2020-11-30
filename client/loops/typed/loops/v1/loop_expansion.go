@@ -18,6 +18,8 @@ type LoopExpansion interface {
 	PatchMeta(ctx context.Context, original, modified *api.Loop) error
 	// Register the last execution
 	SetLastExecution(ctx context.Context, name string, executionTime time.Time, isSuccess bool) error
+
+	SetState(ctx context.Context, name string, state *api.LoopState) error
 }
 
 // Patch the loop spec only (client side usage)
@@ -177,4 +179,55 @@ func (client *loops) SetLastExecution(ctx context.Context, name string, executio
 	}
 
 	return client.PatchStatus(ctx, ori, mod)
+}
+
+func (client *loops) SetState(ctx context.Context, name string, state *api.LoopState) error {
+	if state == nil {
+		return nil
+	}
+
+	if state.UpdateDate == nil {
+		t := meta.NewTime(time.Now())
+		state.UpdateDate = &t
+	}
+
+	ori := &api.Loop{}
+	ori.SetNamespace(client.ns)
+	ori.SetName(name)
+
+	mod := ori.DeepCopy()
+	mod.State = *state
+
+	cur := ori.DeepCopy()
+
+	bOri, err := json.Marshal(ori)
+	if err != nil {
+		return errors.Wrap(err, "cannot marshal origin Loop")
+	}
+
+	bMod, err := json.Marshal(mod)
+	if err != nil {
+		return errors.Wrap(err, "cannot marshal modified Loop")
+	}
+
+	bCur, err := json.Marshal(cur)
+	if err != nil {
+		return errors.Wrap(err, "cannot marshal current Loop")
+	}
+
+	patch, err := jsonmergepatch.CreateThreeWayJSONMergePatch(bOri, bMod, bCur)
+	if err != nil {
+		return errors.Wrap(err, "cannot create merge patch")
+	}
+
+	if len(patch) == 0 || string(patch) == "{}" {
+		return nil
+	}
+
+	_, err = client.Patch(ctx, name, types.MergePatchType, patch, meta.PatchOptions{})
+	if err != nil {
+		return errors.Wrap(err, "cannot patch Loop state")
+	}
+
+	return nil
 }

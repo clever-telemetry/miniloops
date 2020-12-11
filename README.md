@@ -54,7 +54,7 @@ metadata:
   name: test
 spec:
   endpoint: https://warp10.gra1.metrics.ovh.net/api/v0/exec
-  every: 10s
+  every: 1m
   script: |
     REV
     [ NEWGTS 'c' RENAME ] 
@@ -113,7 +113,7 @@ metadata:
   name: test
 spec:
   endpoint: https://warp10.gra1.metrics.ovh.net/api/v0/exec
-  every: 10s
+  every: 1m
   script: "[ $readToken '~.*' {} ] FIND"
   imports:
   - secret:
